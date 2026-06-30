@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent高级开发-AI桌面端 — 项目构建汇报</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --border: #334155;
+    --text: #e2e8f0; --text-muted: #94a3b8;
+    --accent: #3b82f6; --accent2: #06b6d4; --green: #10b981;
+    --orange: #f59e0b; --red: #ef4444; --purple: #8b5cf6;
+  }
+  * { margin:0;padding:0;box-sizing:border-box }
+  body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+  .slide { min-height: 100vh; padding: 56px 72px; border-bottom: 1px solid var(--border); page-break-after: always; position: relative; }
+  h1 { font-size: 2.4em; margin-bottom: 16px; }
+  h2 { font-size: 1.7em; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h3 { font-size: 1.2em; margin-bottom: 10px; color: var(--accent2); }
+  h4 { font-size: 1.02em; margin-bottom: 6px; color: var(--text); }
+  p, li { font-size: 0.92em; line-height: 1.75; color: var(--text-muted); }
+  ul, ol { padding-left: 22px; margin-bottom: 14px; }
+  li { margin-bottom: 3px; }
+  strong { color: var(--text); }
+  .hl { color: var(--accent2); font-weight: 700; }
+  .tag { display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.78em;margin-right:5px;margin-bottom:3px; }
+  .tag-b { background:rgba(59,130,246,.2);color:var(--accent); }
+  .tag-g { background:rgba(16,185,129,.2);color:var(--green); }
+  .tag-o { background:rgba(245,158,11,.2);color:var(--orange); }
+  .tag-p { background:rgba(139,92,246,.2);color:var(--purple); }
+  .tag-c { background:rgba(6,182,212,.2);color:var(--accent2); }
+  .tag-r { background:rgba(239,68,68,.2);color:var(--red); }
+
+  .grid { display:grid; gap:18px; }
+  .g2 { grid-template-columns:1fr 1fr; }
+  .g3 { grid-template-columns:1fr 1fr 1fr; }
+  .g4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 22px; }
+  .ca { border-left:4px solid var(--accent); }
+  .cg { border-left:4px solid var(--green); }
+  .co { border-left:4px solid var(--orange); }
+  .cp { border-left:4px solid var(--purple); }
+  .cc { border-left:4px solid var(--accent2); }
+
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:0.86em; }
+  th { background:var(--surface); color:var(--accent2); text-align:left; padding:8px 12px; border:1px solid var(--border); }
+  td { padding:7px 12px; border:1px solid var(--border); color:var(--text-muted); }
+  tr:nth-child(even) td { background:rgba(30,41,59,.4); }
+
+  .flow { display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:18px 0; }
+  .fs { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 16px; text-align:center; min-width:80px; font-size:0.85em; }
+  .fa { font-size:1.3em;color:var(--accent2); }
+
+  .arch { background:var(--surface); border-radius:8px; padding:14px 20px; margin-bottom:10px; }
+  .arch-l1 { border-left:4px solid #f59e0b; }
+  .arch-l2 { border-left:4px solid #3b82f6; margin-left:16px; }
+  .arch-l3 { border-left:4px solid #10b981; margin-left:32px; }
+
+  .ss { background:var(--surface); border:2px dashed var(--border); border-radius:10px; display:flex;align-items:center;justify-content:center; min-height:160px; color:var(--text-muted); font-size:0.88em; margin:12px 0; }
+
+  .metric { display:flex;gap:12px;flex-wrap:wrap;margin:12px 0; }
+  .mc { flex:1;min-width:120px;background:var(--surface);border-radius:8px;padding:14px;text-align:center; }
+  .mc .v { font-size:1.8em;font-weight:700;color:var(--accent2); }
+  .mc .l { font-size:0.78em;color:var(--text-muted);margin-top:4px; }
+
+  .pn { position:absolute;bottom:28px;right:72px;color:var(--text-muted);font-size:0.8em; }
+
+  .cover { background:linear-gradient(135deg, var(--surface) 0%, #0f2744 100%); min-height:100vh; display:flex;flex-direction:column;align-items:center;justify-content:center; text-align:center; padding:80px; }
+
+  .step-num { display:inline-block;width:36px;height:36px;border-radius:50%;background:var(--accent);color:white;text-align:center;line-height:36px;font-weight:700;font-size:1.1em;margin-right:8px; }
+
+  pre { background:rgba(0,0,0,.4); padding:14px; border-radius:8px; overflow-x:auto; font-size:0.8em; line-height:1.55; margin:10px 0; }
+  pre code { background:transparent;padding:0; }
+
+  .build-phase { display:flex; gap:14px; margin:10px 0; }
+  .build-phase-num { font-size:2em; font-weight:800; color:var(--accent); min-width:50px; text-align:center; flex-shrink:0; }
+  .build-phase-content { flex:1; }
+
+  .req-map { display:grid; grid-template-columns:80px 1fr 1fr; gap:6px 10px; font-size:0.85em; align-items:center; }
+  .req-map .req-id { font-weight:700; color:var(--accent2); }
+  .req-map .req-desc { color:var(--text-muted); }
+  .req-map .req-impl { color:var(--green); }
+
+  @media print { body { background:white;color:#1a1a1a; } .slide { page-break-after:always;min-height:auto;border:none; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ 封面 ═══════════════════════ -->
+<div class="cover">
+  <div style="font-size:0.95em;color:var(--accent2);letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;">智能制造 · 课程大作业</div>
+  <h1 style="font-size:3em;margin-bottom:12px;">Agent 高级开发 — AI 桌面端</h1>
+  <h2 style="font-size:1.5em;border:none;color:var(--text-muted);margin-bottom:28px;">项目构建全过程汇报</h2>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:28px;">
+    <span class="tag tag-b">Electron 41 + React 18 + TypeScript</span>
+    <span class="tag tag-c">DeepSeek V4 Pro</span>
+    <span class="tag tag-g">Document Pipeline (6-stage)</span>
+    <span class="tag tag-p">14 Skills</span>
+    <span class="tag tag-o">C Problem E2E Workflow</span>
+  </div>
+  <p style="color:var(--text-muted);">基于 Open Cowork v3.3.1 开源项目二次开发 &nbsp;|&nbsp; 2026年6月</p>
+</div>
+
+<!-- ═══════════════════════ 1. 需求分析 ═══════════════════════ -->
+<div class="slide">
+  <h2>1. 需求分析 —— 理解老师要什么</h2>
+
+  <h3>课程核心要求拆解</h3>
+  <div class="card ca" style="margin-bottom:16px;">
+    <p>设计并实现一个 AI 桌面端，不能只停留在聊天问答层面，而应形成<strong>"模型 + 工具 + 约束工程 + 知识库 + Skill"</strong>的综合 Agent 桌面系统。三个核心模块、6 个实验步骤、10 项测试要求。</p>
+  </div>
+
+  <div class="g3" style="margin-bottom:16px;">
+    <div class="card ca"><h4>模块一：Coding Agent</h4><p style="font-size:0.85em;">任务理解→代码检索→代码修改→测试执行→错误反馈→补丁迭代。含 Reasonix 缓存优化和 CodeGraph 仓库理解</p></div>
+    <div class="card cg"><h4>模块二：文档解析 RAG</h4><p style="font-size:0.85em;">多格式文档上传→解析→切分→向量化→检索→问答→证据定位。含表格结构识别和 LLM Wiki 知识组织</p></div>
+    <div class="card cp"><h4>模块三：Skill 文档生成</h4><p style="font-size:0.85em;">可复用能力包。LaTeX 论文、Word 报告、PPT 汇报、C 题数据分析。至少 3 个 Skill，含 SKILL.md 定义文件</p></div>
+  </div>
+
+  <h3>需求 → 实现映射</h3>
+  <div class="req-map">
+    <div class="req-id">要求 1</div><div class="req-desc">完整 Coding Agent 流程（任务→修改→测试→验证）</div><div class="req-impl">→ ClaudeAgentRunner + pi-coding-agent SDK</div>
+    <div class="req-id">要求 2</div><div class="req-desc">文档解析 RAG（至少 PDF/Excel/图片 3 类）</div><div class="req-impl">→ DocumentPipeline 六阶段 + 三级 PDF 回退</div>
+    <div class="req-id">要求 3</div><div class="req-desc">Skill 模块（至少 3 个，含文档生成 + 数据分析）</div><div class="req-impl">→ SkillsManager + 14 个 SKILL.md</div>
+    <div class="req-id">要求 4</div><div class="req-desc">定量 + 定性测试（SWE-bench / 文档问答 / C 题）</div><div class="req-impl">→ EvalPanel 三维度统一评测</div>
+    <div class="req-id">要求 5</div><div class="req-desc">数学建模 C 题端到端演示（独立测试项）</div><div class="req-impl">→ CProblemPanel 五步工作流</div>
+    <div class="req-id">要求 6</div><div class="req-desc">完整桌面端 GUI（多面板 + 模型配置 + 交互）</div><div class="req-impl">→ 10 大功能面板 + Zustand 状态管理</div>
+  </div>
+
+  <h3 style="margin-top:16px;">技术选型决策</h3>
+  <table>
+    <tr><th>决策点</th><th>选项</th><th>选择</th><th>理由</th></tr>
+    <tr><td>桌面框架</td><td>Electron / Tauri / PyQt / Gradio</td><td><strong>Electron</strong></td><td>Open Cowork 基于 Electron，生态成熟，跨平台好</td></tr>
+    <tr><td>前端框架</td><td>React / Vue / Svelte</td><td><strong>React 18</strong></td><td>原项目使用 React，组件生态丰富</td></tr>
+    <tr><td>大模型</td><td>GPT-4 / Claude / DeepSeek / 本地</td><td><strong>DeepSeek V4 Pro</strong></td><td>性价比高，兼容 OpenAI API，中文能力强</td></tr>
+    <tr><td>嵌入模型</td><td>text-embedding-3 / bge / m3e</td><td><strong>text-embedding-3-small</strong></td><td>DeepSeek 兼容，1536 维，成本低</td></tr>
+    <tr><td>向量存储</td><td>Qdrant / FAISS / 自建</td><td><strong>内存 + JSON 自建</strong></td><td>零外部依赖，满足实验需求，代码可控</td></tr>
+    <tr><td>PDF 解析</td><td>pdfplumber / PyMuPDF / MinerU</td><td><strong>三级回退链</strong></td><td>保证在任何环境下都能提取内容</td></tr>
+  </table>
+
+  <div class="pn">1 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 2. 环境搭建 ═══════════════════════ -->
+<div class="slide">
+  <h2>2. 环境搭建 —— 从零开始构建开发环境</h2>
+
+  <h3>2.1 基础环境安装</h3>
+  <table>
+    <tr><th>依赖</th><th>版本要求</th><th>安装方式</th><th>作用</th></tr>
+    <tr><td>Node.js</td><td>≥ 22.x</td><td>nvm / 官网安装包</td><td>Electron + Vite + 所有 JS/TS 运行环境</td></tr>
+    <tr><td>Python 3</td><td>≥ 3.9</td><td>官网安装包 (需在 PATH)</td><td>PDF 解析脚本 (pdfplumber/pymupdf/pypdf)</td></tr>
+    <tr><td>Pandoc</td><td>≥ 3.1</td><td>官网安装包 (需在 PATH)</td><td>docx/pptx → markdown 转换</td></tr>
+    <tr><td>Git</td><td>任意</td><td>官网安装包</td><td>版本控制、仓库管理</td></tr>
+  </table>
+
+  <h3>2.2 项目初始化步骤</h3>
+  <div class="build-phase">
+    <div class="build-phase-num">①</div>
+    <div class="build-phase-content card ca">
+      <h4>Fork & Clone 基础项目</h4>
+      <pre><code>git clone https://github.com/OpenCoworkAI/open-cowork.git ai-desktop
+cd ai-desktop
+node --version  # 确认 ≥ 22
+python --version  # 确认 ≥ 3.9
+pandoc --version  # 确认 ≥ 3.1</code></pre>
+    </div>
+  </div>
+
+  <div class="build-phase">
+    <div class="build-phase-num">②</div>
+    <div class="build-phase-content card ca">
+      <h4>安装 Node.js 依赖</h4>
+      <pre><code>npm install
+# 关键依赖：electron, react, vite, typescript
+# better-sqlite3, pi-ai, pi-coding-agent, chokidar
+# @anthropic-ai/sdk, openai, zustand, tailwindcss</code></pre>
+    </div>
+  </div>
+
+  <div class="build-phase">
+    <div class="build-phase-num">③</div>
+    <div class="build-phase-content card ca">
+      <h4>安装 Python 依赖（PDF 解析链）</h4>
+      <pre><code>pip install pdfplumber    # 首选：文本 + 表格提取
+pip install PyMuPDF       # 次选：高性能文本 + 图片
+# pypdf 6.12.2 已预装，作为兜底方案
+pip install pandas openpyxl  # Excel/CSV 解析
+pip install pytesseract      # OCR（可选）</code></pre>
+    </div>
+  </div>
+
+  <div class="build-phase">
+    <div class="build-phase-num">④</div>
+    <div class="build-phase-content card ca">
+      <h4>启动开发服务器</h4>
+      <pre><code>npm run dev
+# 自动执行: download:node → build:wsl-agent → build:mcp → vite
+# Electron 窗口自动打开，Vite HMR 热更新就绪</code></pre>
+    </div>
+  </div>
+
+  <h3>2.3 遇到的问题与解决</h3>
+  <table>
+    <tr><th>问题</th><th>原因</th><th>解决方案</th></tr>
+    <tr><td>ELECTRON_RUN_AS_NODE=1 导致 Electron 崩溃</td><td>VSCode 扩展设置的环境变量泄露到子进程</td><td>在 vite.config.ts 和 package.json dev 脚本中显式删除该环境变量</td></tr>
+    <tr><td>pdfplumber/PyMuPDF 未安装导致 PDF 解析返回空</td><td>Windows 环境下 pip 安装受限（SSL/代理问题）</td><td>添加 pypdf 作为第三级回退（纯 Python，已预装 6.12.2）</td></tr>
+    <tr><td>DeepSeek API 不支持 response_format: json_object</td><td>DeepSeek 不兼容 OpenAI 的结构化输出参数</td><td>改用 prompt 工程 + 健壮的 JSON 后处理（去围栏 + try-catch）</td></tr>
+  </table>
+
+  <div class="pn">2 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 3. 总体架构设计 ═══════════════════════ -->
+<div class="slide">
+  <h2>3. 总体架构设计 —— 画出大框架</h2>
+
+  <h3>设计原则</h3>
+  <div class="g3" style="margin-bottom:14px;">
+    <div class="card ca"><strong>安全性：</strong>Electron contextIsolation + sandbox，所有 IPC 经白名单校验，渲染进程无法直接访问 Node.js</div>
+    <div class="card ca"><strong>模块化：</strong>主进程按功能拆分为独立模块（config/db/skills/document-pipeline/sandbox/mcp/memory），各模块通过接口通信</div>
+    <div class="card ca"><strong>可扩展：</strong>MCP 协议支持动态工具扩展，Skill 目录热重载，多模型 API 适配器</div>
+  </div>
+
+  <h3>三层架构</h3>
+  <div class="arch arch-l1"><strong>🖥️ 渲染进程 (Renderer)</strong> — React 18 + TypeScript + Tailwind CSS + Zustand
+    <p style="margin-top:2px;font-size:0.82em;">10 个功能面板 (Lazy+Suspense 代码分割) · i18next 国际化 · react-markdown+KaTeX 渲染 · lucide-react 图标</p>
+  </div>
+  <div style="margin:4px 0 4px 30px;color:var(--accent2);">↕ IPC Bridge (contextBridge + 30+ ipcMain.handle 通道 + 白名单校验)</div>
+  <div class="arch arch-l2"><strong>⚙️ 主进程 (Main)</strong> — Electron 41 + Node.js 22
+    <div class="g3" style="margin-top:8px;gap:8px;font-size:0.8em;">
+      <div><strong>SessionManager</strong><br>会话生命周期、消息流、权限审批</div>
+      <div><strong>ClaudeAgentRunner</strong><br>pi-ai SDK、工具循环、沙箱适配</div>
+      <div><strong>DocumentPipeline</strong><br>6 阶段文档处理流水线</div>
+      <div><strong>SkillsManager</strong><br>Skill 发现/加载/热重载</div>
+      <div><strong>MCPManager</strong><br>MCP 服务器管理</div>
+      <div><strong>SandboxAdapter</strong><br>WSL2/Lima VM 隔离</div>
+    </div>
+  </div>
+  <div style="margin:4px 0 4px 50px;color:var(--accent2);">↕</div>
+  <div class="arch arch-l3"><strong>💾 数据层</strong>
+    <span class="tag tag-b">better-sqlite3</span> 会话/配置/内存 &nbsp;
+    <span class="tag tag-g">JSON 文件</span> 文档元数据/向量索引/Wiki缓存 &nbsp;
+    <span class="tag tag-o">文件系统</span> Skill目录/日志/临时文件
+  </div>
+
+  <h3 style="margin-top:18px;">构建思路：从"能跑"到"跑得好"</h3>
+  <div class="flow">
+    <div class="fs">Fork 基础项目<br><small>Open Cowork</small></div><div class="fa">→</div>
+    <div class="fs">搭建 Coding Agent<br><small>实验步骤 1-3</small></div><div class="fa">→</div>
+    <div class="fs">构建文档流水线<br><small>实验步骤 4</small></div><div class="fa">→</div>
+    <div class="fs">开发 Skill 系统<br><small>实验步骤 5</small></div><div class="fa">→</div>
+    <div class="fs">组装 GUI 面板<br><small>实验步骤 6</small></div><div class="fa">→</div>
+    <div class="fs">C 题全链路<br><small>独立测试项</small></div><div class="fa">→</div>
+    <div class="fs">评测 & 验证<br><small>定量+定性</small></div>
+  </div>
+  <p style="text-align:center;margin-top:8px;font-size:0.85em;">每一步都在前一步的基础上增量构建，确保每个模块独立可用后再集成</p>
+
+  <div class="ss" style="text-align:center;padding:4px;"><img src="第一步_4.png" style="width:95%;max-height:380px;object-fit:contain;border-radius:8px;border:1px solid var(--border);" alt="项目目录结构与模块概览"><br><small style="color:var(--muted);">▲ 项目 src/main 目录结构与模块概览</small></div>
+  <div class="pn">3 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 4. Coding Agent 基础构建 ═══════════════════════ -->
+<div class="slide">
+  <h2>4. 构建 Coding Agent（一）—— 实验步骤 1：基础 Agent</h2>
+
+  <h3>目标：让 Agent 具备"读代码→改代码→跑测试→看结果"的基本能力</h3>
+
+  <div class="g2">
+    <div class="card ca">
+      <h4>核心引擎：ClaudeAgentRunner</h4>
+      <p>基于 <code>@mariozechner/pi-coding-agent</code> SDK (1514 行 TypeScript)，封装：</p>
+      <ul>
+        <li><strong>多模型路由：</strong>resolvePiRegistryModel() 支持 Anthropic/OpenAI/DeepSeek/Gemini/Ollama</li>
+        <li><strong>工具循环：</strong>run() 方法驱动 "模型响应 → 工具调用 → 结果反馈 → 继续推理" 的 Agent Loop</li>
+        <li><strong>流式处理：</strong>ThinkTagStreamParser 分离 &lt;thinking&gt; 标签，Artifact 提取器检测代码工件</li>
+        <li><strong>循环检测：</strong>LoopGuard 监控重复工具调用模式，自动注入转向消息</li>
+        <li><strong>取消机制：</strong>AbortController 支持用户随时终止</li>
+      </ul>
+    </div>
+    <div class="card ca">
+      <h4>工具系统 (Tools)</h4>
+      <table style="font-size:0.82em;">
+        <tr><th>工具</th><th>实现方式</th><th>安全措施</th></tr>
+        <tr><td>Read</td><td>fs.readFileSync</td><td>路径隔离 (VIRTUAL_WORKSPACE_PATH)</td></tr>
+        <tr><td>Write/Edit</td><td>fs.writeFileSync + 字符串替换</td><td>备份机制、路径校验</td></tr>
+        <tr><td>Glob/Grep</td><td>fast-glob + ripgrep</td><td>限制搜索范围</td></tr>
+        <tr><td>Bash</td><td>child_process.spawn</td><td>超时控制、沙箱适配、maxBuffer</td></tr>
+        <tr><td>Git diff/log</td><td>git CLI</td><td>只读操作优先</td></tr>
+        <tr><td>Test Runner</td><td>自定义脚本 + 输出捕获</td><td>独立目录运行</td></tr>
+        <tr><td>Permission</td><td>IPC → 渲染进程弹窗</td><td>高风险操作需用户审批</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">Agent 执行流程</h3>
+  <div class="flow">
+    <div class="fs">用户输入任务</div><div class="fa">→</div>
+    <div class="fs">SessionManager<br>创建会话</div><div class="fa">→</div>
+    <div class="fs">AgentRunner.run()<br>构建 system prompt</div><div class="fa">→</div>
+    <div class="fs">模型推理<br>返回工具调用</div><div class="fa">→</div>
+    <div class="fs">执行工具<br>捕获结果</div><div class="fa">→</div>
+    <div class="fs">结果反馈<br>继续推理...</div><div class="fa">↺</div>
+  </div>
+
+  <div class="card co" style="margin-top:14px;">
+    <h4>关键设计决策</h4>
+    <ul>
+      <li><strong>AGENTS.md 文件：</strong>项目根目录放置 AGENTS.md，定义 Agent 行为规范、工具使用策略、项目约定</li>
+      <li><strong>任务计划机制：</strong>TodoWrite + Task 工具让 Agent 先规划再执行，记录每步的工具调用和结果</li>
+      <li><strong>权限系统：</strong>读文件/执行命令自动放行，git push/rm -rf 等高风险操作需用户在弹窗中审批</li>
+      <li><strong>可回滚：</strong>通过 git 版本控制实现 checkpoint，出错可以回退</li>
+    </ul>
+  </div>
+
+  <div class="ss" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:4px;">
+    <div style="flex:1;min-width:200px;text-align:center;"><img src="第一步_1.png" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="步骤1"><small style="color:var(--muted);display:block;">▲ 切换目录并开始对话</small></div>
+    <div style="flex:1;min-width:200px;text-align:center;"><img src="第一步_2.png" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="步骤2"><small style="color:var(--muted);display:block;">▲ Agent 探索目录结构</small></div>
+    <div style="flex:1;min-width:200px;text-align:center;"><img src="第一步_3.png" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="步骤3"><small style="color:var(--muted);display:block;">▲ Agent 分析目录并返回结果</small></div>
+  </div>
+  <div class="pn">4 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 5. Reasonix 缓存优化 ═══════════════════════ -->
+<div class="slide">
+  <h2>5. 构建 Coding Agent（二）—— 实验步骤 2：Reasonix 缓存优化</h2>
+
+  <h3>目标：最大化 DeepSeek API 的 prompt cache 命中率，降低 token 消耗和延迟</h3>
+
+  <p>参考 <a href="https://github.com/esengine/deepseek-reasonix" style="color:var(--accent2);">deepseek-reasonix</a> 的设计理念。DeepSeek API 的缓存机制要求<strong>前缀完全匹配</strong>才能命中——这意味着每次请求的前缀内容（system prompt、工具定义、仓库摘要）必须保持稳定。</p>
+
+  <div class="g2" style="margin-top:12px;">
+    <div class="card co">
+      <h4>策略 1：Append-Only Session</h4>
+      <p>会话消息只追加不修改。新消息追加在末尾，历史消息前缀不变。这样每次 API 调用时，缓存的前缀部分（历史消息+系统提示）可以直接命中。</p>
+      <p style="margin-top:4px;font-size:0.82em;"><strong>实现：</strong>SessionManager 的消息数组采用不可变 push，禁止 splice/修改已有消息</p>
+    </div>
+    <div class="card co">
+      <h4>策略 2：Stable Prefix Prompt</h4>
+      <p>系统提示词、工具 schema 定义、仓库摘要信息固定在对话历史的最前面，顺序和内容都不变。</p>
+      <p style="margin-top:4px;font-size:0.82em;"><strong>实现：</strong>buildPiSessionRuntimeSignature() 中固化工具定义顺序，AGENTS.md 内容放前缀</p>
+    </div>
+    <div class="card co">
+      <h4>策略 3：Rolling Task State</h4>
+      <p>长任务中，将工具调用结果压缩为滚动摘要，避免上下文无限膨胀。只保留最近 N 轮的完整工具结果，更早的压缩为摘要。</p>
+      <p style="margin-top:4px;font-size:0.82em;"><strong>实现：</strong>error/log 压缩 + 上下文窗口监控 + 超限自动摘要</p>
+    </div>
+    <div class="card co">
+      <h4>策略 4：Cache Hit 监控</h4>
+      <p>实时统计每次 API 调用的 cache_hit_tokens / cache_miss_tokens，可视化展示节省的 token 数量和成本。</p>
+      <p style="margin-top:4px;font-size:0.82em;"><strong>实现：</strong>CacheMonitorExtension 注入到 Agent Runtime，数据通过 IPC 实时推送到 UI</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">缓存命中原理</h3>
+  <div class="card" style="text-align:center;">
+    <pre style="text-align:left;display:inline-block;"><code>Request N:   [System Prompt] [Tool Schemas] [Repo Summary] [Turn 1] [Turn 2] ... [Turn N-1] [Turn N]
+Request N+1: [System Prompt] [Tool Schemas] [Repo Summary] [Turn 1] [Turn 2] ... [Turn N-1] [Turn N] [Turn N+1]
+                                    ↑ 前缀完全一致 → Cache HIT ↑                          ↑ 新内容 → Cache MISS ↑</code></pre>
+  </div>
+
+  <div class="metric">
+    <div class="mc"><div class="v">↑</div><div class="l">Cache Hit Rate<br>目标 > 60%</div></div>
+    <div class="mc"><div class="v">↓</div><div class="l">Input Token Cost<br>降低 40-70%</div></div>
+    <div class="mc"><div class="v">↓</div><div class="l">Latency per Loop<br>降低 30-50%</div></div>
+    <div class="mc"><div class="v">↑</div><div class="l">Task Completion<br>提高稳定性</div></div>
+  </div>
+
+  <div class="ss">📸 [截图占位] Cache Hit 监控面板 —— 展示各轮对话的缓存命中率、token 消耗曲线</div>
+  <div class="pn">5 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 6. CodeGraph 代码理解 ═══════════════════════ -->
+<div class="slide">
+  <h2>6. 构建 Coding Agent（三）—— 实验步骤 3：CodeGraph 仓库理解</h2>
+
+  <h3>目标：让 Agent 理解仓库级结构，精准检索上下文，减少无效文件读取</h3>
+
+  <p>参考 <a href="https://github.com/colbymchenry/codegraph" style="color:var(--accent2);">codegraph</a> 的设计思路。没有 CodeGraph 时，Agent 只能逐个读取文件"摸索"代码结构，浪费大量 token。有了 CodeGraph，Agent 可以直接查询"这个函数被谁调用"、"修改这个文件会影响哪些测试"。</p>
+
+  <div class="g2" style="margin-top:12px;">
+    <div class="card ca">
+      <h4>五层代码知识图谱</h4>
+      <table style="font-size:0.82em;">
+        <tr><th>图层</th><th>构建方式</th><th>回答的问题</th></tr>
+        <tr><td><strong>Symbol Graph</strong></td><td>tree-sitter / LSP 静态分析</td><td>这个函数/类在哪里定义？有哪些引用？</td></tr>
+        <tr><td><strong>Call Graph</strong></td><td>函数调用关系解析</td><td>这个函数调用了谁？被谁调用？调用链是什么？</td></tr>
+        <tr><td><strong>Import Graph</strong></td><td>import/require 语句解析</td><td>这个模块依赖哪些文件？哪些文件依赖它？</td></tr>
+        <tr><td><strong>Test Graph</strong></td><td>测试文件 ↔ 源文件映射</td><td>修改这个源文件需要跑哪些测试？</td></tr>
+        <tr><td><strong>Build Graph</strong></td><td>构建配置解析</td><td>这个目标依赖哪些源文件？编译顺序是什么？</td></tr>
+      </table>
+    </div>
+    <div class="card ca">
+      <h4>CodeGraph 工作流程</h4>
+      <ol style="font-size:0.85em;">
+        <li><strong>预处理：</strong>项目启动时扫描仓库，构建五层图谱索引</li>
+        <li><strong>存储：</strong>图谱数据存入 better-sqlite3，支持高效查询</li>
+        <li><strong>查询接口：</strong>Agent 通过 MCP Tools 查询图谱（如 get_callers, get_imports）</li>
+        <li><strong>上下文注入：</strong>查询结果自动注入到 Agent 的上下文窗口</li>
+        <li><strong>错误定位：</strong>根据错误日志和测试失败，沿调用链自动定位候选文件</li>
+      </ol>
+      <p style="font-size:0.82em;margin-top:8px;"><strong>Token 节省效果：</strong>不用把整个仓库文件列表放进 prompt，只放相关的 3-5 个文件路径和依赖关系</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">与传统方式的对比</h3>
+  <table>
+    <tr><th>对比维度</th><th>传统方式（无 CodeGraph）</th><th>CodeGraph 方式</th></tr>
+    <tr><td>理解代码结构</td><td>逐个 ls + read 文件摸索 → 多轮对话</td><td>一次查询即获取依赖全景 → 1 轮对话</td></tr>
+    <tr><td>定位相关文件</td><td>Agent 凭"直觉"猜测 → 可能漏掉关键文件</td><td>沿 import/call graph 精准定位 → 不遗漏</td></tr>
+    <tr><td>修改后测试</td><td>可能跑全量测试 → 浪费时间</td><td>Test Graph 定位相关测试 → 精准测试</td></tr>
+    <tr><td>Token 消耗</td><td>大量 ls/read 调用消耗 token</td><td>单次查询返回结构化结果 → 节省 60%+</td></tr>
+  </table>
+
+  <div class="ss">📸 [截图占位] CodeGraph 可视化 —— 函数调用图 / 依赖关系图展示</div>
+  <div class="pn">6 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 7. 文档流水线构建（一）解析器 ═══════════════════════ -->
+<div class="slide">
+  <h2>7. 构建文档流水线（一）—— 实验步骤 4：多格式解析引擎</h2>
+
+  <h3>目标：支持 PDF/Word/PPT/Excel/CSV/图片 等多格式文档的解析，提取结构化内容</h3>
+
+  <h3>设计思路：按文件类型路由 → 各自最佳引擎解析 → 统一数据结构输出</h3>
+  <p>核心类 <code>DocumentParser</code> (700+ 行)，首先检测环境中 Python 和 Pandoc 的可用性，然后按文件类型选择解析策略。</p>
+
+  <div class="g2" style="margin-top:12px;">
+    <div class="card ca">
+      <h4>PDF 解析：三级回退链</h4>
+      <p style="font-size:0.82em;">这是最关键也最复杂的解析路径。不同环境下可用的库不同，需要设计健壮的回退机制。</p>
+      <table style="font-size:0.8em;margin-top:8px;">
+        <tr><th>优先级</th><th>引擎</th><th>能力</th><th>依赖</th></tr>
+        <tr><td style="color:var(--green);">①首选</td><td>pdfplumber</td><td>文本+表格提取（基于线的表格检测）</td><td>pip install pdfplumber</td></tr>
+        <tr><td style="color:var(--orange);">②次选</td><td>PyMuPDF (fitz)</td><td>高性能文本提取+图片提取</td><td>pip install PyMuPDF</td></tr>
+        <tr><td style="color:var(--red);">③兜底</td><td>pypdf</td><td>纯 Python 文本提取</td><td>预装 6.12.2，零额外依赖</td></tr>
+      </table>
+      <p style="font-size:0.8em;margin-top:6px;"><strong>构建关键：</strong>Python 脚本通过 Node.js spawnSync 调用，脚本写入临时目录执行以避免 shell 转义问题。每种引擎的输出统一转为 <code>DocumentSection[]</code> + <code>ParsedTable[]</code> 结构。</p>
+    </div>
+    <div class="card ca">
+      <h4>其他格式解析策略</h4>
+      <table style="font-size:0.8em;">
+        <tr><th>格式</th><th>引擎</th><th>转换路径</th></tr>
+        <tr><td>Word (.docx)</td><td>Pandoc</td><td>docx → markdown → 解析标题/段落/列表</td></tr>
+        <tr><td>PPT (.pptx)</td><td>Pandoc</td><td>pptx → markdown → 保留幻灯片结构</td></tr>
+        <tr><td>Excel (.xlsx)</td><td>pandas</td><td>pd.read_excel() → 每工作表一个 ParsedTable</td></tr>
+        <tr><td>CSV</td><td>pandas</td><td>pd.read_csv() → 自动检测编码和分隔符</td></tr>
+        <tr><td>Markdown/TXT</td><td>fs</td><td>直接读取 → 解析标题层级</td></tr>
+        <tr><td>图片 (PNG/JPG)</td><td>pytesseract</td><td>OCR → 文字 + 坐标 + 置信度</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">统一数据结构设计</h3>
+  <div class="card cg">
+    <pre><code>// 所有格式解析后统一为三种结构化数据
+interface DocumentSection { id, title, level, content, pageStart, pageEnd }
+interface ParsedTable { id, page, caption, headers: TableHeader[], rows: string[][],
+  mergedCells: MergedCell[], markdown, html, csv, bbox }
+interface ParsedImage { id, page, caption, ocrText, ocrConfidence, bbox, base64 }</code></pre>
+  </div>
+
+  <div class="ss">📸 [截图占位] 文档上传解析界面 —— 展示不同格式文档的解析日志、状态、解析结果预览</div>
+  <div class="pn">7 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 8. 文档流水线构建（二）索引+向量 ═══════════════════════ -->
+<div class="slide">
+  <h2>8. 构建文档流水线（二）—— 索引与向量存储</h2>
+
+  <h3>目标：将解析后的文档内容切块、向量化、建立可检索索引</h3>
+
+  <div class="g2">
+    <div class="card ca">
+      <h4>DocumentIndexer：智能分块策略</h4>
+      <ul>
+        <li><strong>分块大小：</strong>maxChunkChars = 1000 字符，overlapChars = 100 字符重叠。重叠保证跨块边界的语义连续性</li>
+        <li><strong>CJK 感知：</strong>estimateTokenCount() 区分中文字符 (×1.5) 和英文 (×0.3)，准确估计 token 数</li>
+        <li><strong>三类块：</strong>text（正文段落）、table（表格的 markdown 序列化）、image（OCR 文字 + 图注）</li>
+        <li><strong>批量嵌入：</strong>embeddingBatchSize = 8，并行调用嵌入 API，支持进度回调</li>
+      </ul>
+    </div>
+    <div class="card ca">
+      <h4>VectorStore：混合检索引擎</h4>
+      <p>自建内存向量存储（~520 行），零外部依赖。</p>
+      <ul>
+        <li><strong>存储：</strong>Map&lt;chunkId, Chunk&gt; + JSON 文件持久化</li>
+        <li><strong>嵌入 API：</strong>调用 DeepSeek 兼容的 /v1/embeddings，模型 text-embedding-3-small (1536 维)</li>
+        <li><strong>向量检索：</strong>cosineSimilarity() 计算，纯 JS 实现</li>
+        <li><strong>BM25 检索：</strong>computeBM25Score() (k1=1.5, b=0.75)，tokenize() 支持中英文混合分词</li>
+        <li><strong>混合搜索：</strong>Reciprocal Rank Fusion (RRF, k=60) 融合向量和关键词两路得分</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">混合检索的 RRF 融合算法</h3>
+  <div class="card">
+    <pre><code>// 并行执行向量检索和 BM25 关键词检索，用 RRF 融合排名
+const [vectorResults, keywordResults] = await Promise.all([
+  this.search(queryEmbedding, candidateLimit),    // 余弦相似度
+  this.keywordSearch(query, candidateLimit),       // BM25 评分
+]);
+
+// RRF: score = 1/(k + rank), k=60
+for (let i = 0; i &lt; vectorResults.length; i++)
+  entry.rrfScore += 1 / (60 + i + 1);  // 向量排名贡献
+for (let i = 0; i &lt; keywordResults.length; i++)
+  entry.rrfScore += 1 / (60 + i + 1);  // 关键词排名贡献
+
+// 按 RRF 总分排序，取 topK
+// 优势：向量擅长语义匹配（"就业"匹配"工作"），关键词擅长精确匹配（数字、日期、专有名词）</code></pre>
+  </div>
+
+  <div class="ss">📸 [截图占位] 文档检索结果展示 —— 检索关键词、命中文本块、相似度得分、证据来源</div>
+  <div class="pn">8 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 9. 文档流水线构建（三）QA + Wiki ═══════════════════════ -->
+<div class="slide">
+  <h2>9. 构建文档流水线（三）—— RAG 问答与 LLM Wiki</h2>
+
+  <h3>目标：基于检索结果生成可信回答（含证据溯源），并将文档组织为结构化知识</h3>
+
+  <div class="g2">
+    <div class="card cg">
+      <h4>DocumentQA：检索增强生成问答</h4>
+      <p><strong>工作流程：</strong></p>
+      <ol style="font-size:0.85em;">
+        <li>用户提问 → searchHybrid() 检索 topK=10 个相关块</li>
+        <li>将检索到的 chunk 内容和证据信息组成 context prompt</li>
+        <li>发送给 DeepSeek V4 Pro 生成答案</li>
+        <li>返回 QAAnswer { answer, evidence[], confidence, tokensUsed }</li>
+      </ol>
+      <p style="margin-top:6px;font-size:0.85em;"><strong>两种模式：</strong>precise (temperature=0.1) 用于事实查找；conversational (temperature=0.5) 用于讨论性问答</p>
+      <p style="font-size:0.85em;"><strong>证据溯源：</strong>EvidenceItem 包含 fileName + pageNumber + sectionTitle + tableId + cellRange + excerpt，每个回答都能追溯到原文具体位置</p>
+    </div>
+    <div class="card cg">
+      <h4>LLMWikiBuilder：结构化知识组织</h4>
+      <p><strong>与普通 RAG 的区别：</strong>RAG 每次问答都需要检索 → Wiki 预先生成结构化的知识卡片，可复用。</p>
+      <p style="margin-top:6px;font-size:0.85em;"><strong>WikiCard 生成流程：</strong></p>
+      <ol style="font-size:0.85em;">
+        <li>将文档完整内容发送给 LLM</li>
+        <li>LLM 生成摘要、提取关键概念、生成章节摘要</li>
+        <li>extractJsonBlock() 健壮提取 JSON 结果</li>
+        <li>缓存到 Map&lt;docId, WikiCard&gt;，后续直接复用</li>
+        <li>findCrossReferences() 发现跨文档关联</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">问答能力矩阵</h3>
+  <table>
+    <tr><th>问答类型</th><th>实现方式</th><th>证据格式</th><th>示例</th></tr>
+    <tr><td>事实查找</td><td>searchHybrid → LLM 提取答案</td><td>fileName + pageNumber</td><td>"模型使用了什么算法？"</td></tr>
+    <tr><td>跨页定位</td><td>多 chunk 聚合 → 综合回答</td><td>多个 pageNumber + excerpt</td><td>"第三章讨论了哪些方法？"</td></tr>
+    <tr><td>表格计算</td><td>askTableQuestion → tableId 定向检索</td><td>tableId + cellRange</td><td>"附件1 中最高收入是多少？"</td></tr>
+    <tr><td>跨文档对比</td><td>多文档 search → LLM 对比分析</td><td>各文档名 + 页码</td><td>"A 方案和 B 方案的区别？"</td></tr>
+    <tr><td>数值推理</td><td>检索原始数据 → LLM 计算</td><td>原始数据 + 计算公式</td><td>"平均增长率是多少？"</td></tr>
+  </table>
+
+  <div class="ss">📸 [截图占位] RAGPanel 问答界面 —— 展示问题输入、答案输出、证据引用列表、置信度</div>
+  <div class="pn">9 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 10. C 题解析 ═══════════════════════ -->
+<div class="slide">
+  <h2>10. 构建 C 题专有解析 —— 数学建模题面结构化提取</h2>
+
+  <h3>目标：从 C 题 PDF 中提取问题背景、子问题、数据字段、约束条件等结构化信息</h3>
+
+  <p>数学建模 C 题的 PDF 不是普通文档——它包含<strong>问题背景、多个子问题、附件数据说明、约束条件、评价指标、提交格式</strong>等固定结构的信息。需要设计专门的数据结构和 prompt 来提取。</p>
+
+  <div class="g2" style="margin-top:12px;">
+    <div class="card co">
+      <h4>CProblemParsed 数据结构设计</h4>
+      <pre><code style="font-size:0.75em;">interface CProblemParsed {
+  title: string;               // 题目标题
+  background: string;          // 题目背景
+  problems: CProblem[];        // 子问题列表
+  attachments: CAttachment[];  // 附件信息
+  dataFields: CDataField[];    // 数据字段描述
+  constraints: string[];       // 约束条件
+  evaluationMetrics: string[]; // 评价指标
+  submissionFormat: string;    // 提交格式
+  paperRequirements: string;   // 论文要求
+}
+
+interface CDataField {
+  name: string;
+  type: 'numeric'|'categorical'|'datetime'|'text';
+  unit?: string;
+  missingRate: number;  // 自动统计
+  description: string;
+}</code></pre>
+    </div>
+    <div class="card co">
+      <h4>DeepSeek 兼容性处理</h4>
+      <p><strong>问题：</strong>DeepSeek API 不支持 OpenAI 的 <code>response_format: { type: 'json_object' }</code> 参数</p>
+      <p><strong>解决：</strong></p>
+      <ul style="font-size:0.85em;">
+        <li>在 system prompt 中明确要求"直接返回 JSON，不要用 ```json 包裹"</li>
+        <li>temperature 设为 0.1 提高输出稳定性</li>
+        <li>max_tokens 设为 4096 确保完整输出</li>
+        <li>后处理：strip markdown 围栏 → JSON.parse → try-catch</li>
+        <li>解析后自动补充字段（如 missingRate 默认值）</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">附件数据理解</h3>
+  <div class="card cg">
+    <p>对 C 题附件（Excel/CSV）进行自动字段分析：</p>
+    <ul>
+      <li><strong>字段类型识别：</strong>numeric（数值型）/ categorical（分类型）/ datetime（时间型）/ text（文本型）</li>
+      <li><strong>缺失值统计：</strong>每列的 missingRate（缺失比例），为后续数据清洗提供依据</li>
+      <li><strong>统计特征：</strong>数值列计算 min/max/mean/std，分类型计算 uniqueValues</li>
+      <li><strong>数据字典生成：</strong>为每个字段生成结构化描述，供代码生成和论文写作使用</li>
+    </ul>
+  </div>
+
+  <div class="ss">📸 [截图占位] C 题 PDF 解析结果 —— CProblemPanel 中展示提取的标题、子问题、数据字段、约束条件</div>
+  <div class="pn">10 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 11. Skill 系统构建（一） ═══════════════════════ -->
+<div class="slide">
+  <h2>11. 构建 Skill 系统（一）—— 实验步骤 5：能力包设计</h2>
+
+  <h3>目标：设计可复用的 Skill 文件格式，实现技能发现、加载、热重载和执行</h3>
+
+  <p><strong>核心理念：</strong>Skill 不是简单的提示词，而是包含<strong>适用场景、工具调用流程、模板文件、验证标准、失败恢复</strong>的完整能力包。</p>
+
+  <h3>Skill 文件规范设计</h3>
+  <table>
+    <tr><th>字段</th><th>作用</th><th>构建细节</th></tr>
+    <tr><td><strong>name</strong></td><td>Skill 唯一标识</td><td>用于目录名和 SKILL.md front-matter，如 latex-paper</td></tr>
+    <tr><td><strong>description</strong></td><td>适用任务说明</td><td>描述能力范围，帮助 Agent 判断何时使用此 Skill</td></tr>
+    <tr><td><strong>trigger</strong></td><td>触发条件</td><td>关键词匹配，如"生成论文""生成 Word 报告""分析 Excel 数据"</td></tr>
+    <tr><td><strong>input schema</strong></td><td>输入格式定义</td><td>需要的文件类型（题目 PDF、附件数据、模板）、参数</td></tr>
+    <tr><td><strong>workflow</strong></td><td>任务拆解步骤</td><td>逐步描述任务执行流程，如"解析题面→生成方案→执行代码→生成图表→撰写正文→检查格式"</td></tr>
+    <tr><td><strong>tools</strong></td><td>可调用工具列表</td><td>Python、LaTeX 编译器、python-docx、python-pptx、Pandoc、matplotlib</td></tr>
+    <tr><td><strong>templates</strong></td><td>模板文件</td><td>可选，指向模板目录（论文模板、实验报告模板、PPT 模板）</td></tr>
+    <tr><td><strong>validation</strong></td><td>自动验证标准</td><td>代码运行成功、LaTeX 编译通过、Word 标题完整、PPT 页数满足、图表引用正确</td></tr>
+    <tr><td><strong>examples</strong></td><td>输入输出样例</td><td>成功案例 + 失败案例及原因分析</td></tr>
+  </table>
+
+  <h3 style="margin-top:14px;">SkillsManager：技能生命周期管理</h3>
+  <div class="card cp">
+    <p><strong>SkillsManager</strong> (999 行 TypeScript) 实现完整的技能生命周期：</p>
+    <ul>
+      <li><strong>三层来源（优先级从高到低）：</strong>项目级 (.skills/) → 全局 (~/.claude/skills/) → 内置 (.claude/skills/)</li>
+      <li><strong>自动发现：</strong>扫描各 Skill 目录中的 SKILL.md 文件，解析 YAML front-matter 提取 name/description/trigger</li>
+      <li><strong>热重载：</strong>Chokidar (chokidar ^4.0.1) 监听 Skill 目录的文件变更，自动重新加载</li>
+      <li><strong>变更检测：</strong>computeStorageSignature() 基于 mtime 生成签名，增量更新而非全量重载</li>
+      <li><strong>按需加载：</strong>Agent 只加载与当前任务匹配的 Skill，而不是全量放入 context，节省 token</li>
+      <li><strong>启用/禁用：</strong>用户可以在 SkillPanel 中管理每个 Skill 的启用状态</li>
+    </ul>
+  </div>
+
+  <div class="ss" style="text-align:center;padding:4px;"><img src="skill.png" style="width:95%;max-height:380px;object-fit:contain;border-radius:8px;border:1px solid var(--border);" alt="Skill列表"><br><small style="color:var(--muted);">▲ Skill 管理面板 — 内置 14 个 Skill，支持启用/禁用管理</small></div>
+  <div class="pn">11 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 12. Skill 系统构建（二） ═══════════════════════ -->
+<div class="slide">
+  <h2>12. 构建 Skill 系统（二）—— 14 个 Skill 实现清单</h2>
+
+  <h3>按课程要求分组</h3>
+
+  <table>
+    <tr><th>#</th><th>Skill 名称</th><th>对应课程要求</th><th>功能描述</th></tr>
+    <tr><td colspan="4" style="background:var(--surface);color:var(--purple);"><strong>▸ 文档生成 Skill（满足"至少 1 个文档生成 Skill"要求）</strong></td></tr>
+    <tr><td>1</td><td><strong>latex-paper</strong></td><td><span class="tag tag-p">文档生成</span></td><td>生成 LaTeX 学术论文，ctexart 中文支持，含摘要/引言/方法/实验/结果/结论/参考文献</td></tr>
+    <tr><td>2</td><td><strong>word-report</strong></td><td><span class="tag tag-p">文档生成</span></td><td>生成 Word 实验报告（Markdown），含封面/目的/步骤/结果/结论/图表</td></tr>
+    <tr><td>3</td><td><strong>ppt-slides</strong></td><td><span class="tag tag-p">文档生成</span></td><td>生成 PPT 汇报大纲，含标题页/目录/内容页/图表建议/总结/Q&A</td></tr>
+    <tr><td>4</td><td><strong>paper-write</strong></td><td><span class="tag tag-p">文档生成</span></td><td>论文写作助手：扩写、润色、结构化、一致性检查</td></tr>
+    <tr><td colspan="4" style="background:var(--surface);color:var(--orange);"><strong>▸ 数据分析 Skill（满足"至少 1 个数据分析/C 题 Skill"要求）</strong></td></tr>
+    <tr><td>5</td><td><strong>data-analysis</strong></td><td><span class="tag tag-o">数据分析</span></td><td>数据分析方案+Python 代码：数据清洗、统计描述、可视化、建模（pandas/numpy/matplotlib）</td></tr>
+    <tr><td colspan="4" style="background:var(--surface);color:var(--accent2);"><strong>▸ 文档操作 Skill</strong></td></tr>
+    <tr><td>6</td><td><strong>docx</strong></td><td><span class="tag tag-c">文档操作</span></td><td>Word 文档创建/编辑/分析，基于 docx-js 和 XML 操作，支持修订跟踪</td></tr>
+    <tr><td>7</td><td><strong>pptx</strong></td><td><span class="tag tag-c">文档操作</span></td><td>PowerPoint 创建/编辑，基于 python-pptx</td></tr>
+    <tr><td>8</td><td><strong>xlsx</strong></td><td><span class="tag tag-c">文档操作</span></td><td>Excel 电子表格创建和数据分析，基于 pandas + openpyxl</td></tr>
+    <tr><td>9</td><td><strong>pdf</strong></td><td><span class="tag tag-c">文档操作</span></td><td>PDF 文档解析、提取和操作</td></tr>
+    <tr><td colspan="4" style="background:var(--surface);color:var(--blue);"><strong>▸ 工具/辅助 Skill</strong></td></tr>
+    <tr><td>10</td><td><strong>python-sandbox</strong></td><td><span class="tag tag-b">工具</span></td><td>Python 沙箱执行环境（pandas/numpy/matplotlib/scikit-learn），图表保存到工作目录</td></tr>
+    <tr><td>11</td><td><strong>skill-creator</strong></td><td><span class="tag tag-b">工具</span></td><td>辅助用户快速创建新 Skill，自动生成 SKILL.md 模板</td></tr>
+    <tr><td>12</td><td><strong>latex-output</strong></td><td><span class="tag tag-b">输出</span></td><td>LaTeX 编译引擎，调用 pdflatex 生成 PDF</td></tr>
+    <tr><td>13</td><td><strong>latex-paper-conversion</strong></td><td><span class="tag tag-b">转换</span></td><td>Markdown → LaTeX 论文格式转换</td></tr>
+    <tr><td>14</td><td><strong>latex-conference-template-organizer</strong></td><td><span class="tag tag-b">模板</span></td><td>学术会议 LaTeX 模板组织管理</td></tr>
+  </table>
+
+  <p style="margin-top:12px;"><strong>课程最低要求：</strong>至少 3 个 Skill（含 1 文档生成 + 1 数据分析/C 题）✓
+  <strong>实际实现：</strong>14 个 Skill，远超最低要求</p>
+
+  <h3 style="margin-top:12px;">Skill 执行流程</h3>
+  <div class="flow">
+    <div class="fs">用户输入任务<br>+ 上传文件</div><div class="fa">→</div>
+    <div class="fs">trigger 匹配<br>选择 Skill</div><div class="fa">→</div>
+    <div class="fs">按需加载<br>Skill 说明</div><div class="fa">→</div>
+    <div class="fs">Skill 生成<br>任务计划</div><div class="fa">→</div>
+    <div class="fs">调用工具<br>执行任务</div><div class="fa">→</div>
+    <div class="fs">validation<br>自动检查</div><div class="fa">→</div>
+    <div class="fs">导出文件<br>展示结果</div>
+  </div>
+
+  <div class="ss" style="text-align:center;padding:4px;"><img src="skill_2.png" style="width:95%;max-height:380px;object-fit:contain;border-radius:8px;border:1px solid var(--border);" alt="Skill详情"><br><small style="color:var(--muted);">▲ LaTeX论文 Skill 详情页 — 描述/输入模板/生成按钮/结果展示</small></div>
+  <div class="pn">12 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 13. GUI 面板构建 ═══════════════════════ -->
+<div class="slide">
+  <h2>13. 构建桌面端 GUI —— 实验步骤 6：10 大功能面板</h2>
+
+  <h3>目标：将 Coding Agent、文档知识库、Skill 系统统一到一个桌面界面中</h3>
+
+  <h3>界面布局架构</h3>
+  <div class="g2">
+    <div class="card ca">
+      <h4>布局设计</h4>
+      <p><strong>左侧导航 (Sidebar)：</strong>会话列表 + 功能面板切换按钮 (Eval / CProblem / RAG / Skill)</p>
+      <p><strong>中间主区域：</strong>ChatView (Agent 对话) 或 WelcomeView (欢迎页) 或功能面板</p>
+      <p><strong>右侧上下文 (ContextPanel)：</strong>当前会话的文件列表、工具调用记录、Trace Steps 可视化</p>
+      <p><strong>顶部：</strong>自定义标题栏 (Windows frame:false) 或 macOS 原生三色灯 (titleBarStyle: hiddenInset)</p>
+    </div>
+    <div class="card ca">
+      <h4>面板路由逻辑 (App.tsx)</h4>
+      <pre><code style="font-size:0.78em;">Settings 开启？
+  → SettingsPanel (含 8 个子选项卡)
+否则 activeToolPanel?
+  → 'eval'     → EvalPanel
+  → 'cproblem' → CProblemPanel
+  → 'rag'      → RAGPanel
+  → 'skill'    → SkillPanel
+否则 activeSessionId?
+  → ChatView + ContextPanel
+否则
+  → WelcomeView
+
+// 全部使用 React.lazy() + Suspense 代码分割</code></pre>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">10 大功能面板对应课程要求</h3>
+  <table>
+    <tr><th>面板</th><th>文件大小</th><th>对应课程要求</th><th>核心功能</th></tr>
+    <tr><td><strong>ChatView</strong></td><td>31 KB</td><td>要求 1：基础 Agent 交互</td><td>消息输入/流式渲染/Markdown+KaTeX/工具调用展示</td></tr>
+    <tr><td><strong>ContextPanel</strong></td><td>28 KB</td><td>要求 6：上下文展示</td><td>已读文件/工具调用/Trace Steps/可回滚 checkpoints</td></tr>
+    <tr><td><strong>SettingsPanel</strong></td><td>10+ KB</td><td>要求 6：模型配置</td><td>API 配置/MCP 管理/沙箱配置/内存管理/日志查看</td></tr>
+    <tr><td><strong>EvalPanel</strong></td><td>19 KB</td><td>要求 4：评测面板</td><td>三维度统一评测（文档/Skill/C 题）</td></tr>
+    <tr><td><strong>CProblemPanel</strong></td><td>21 KB</td><td>要求 8：C 题综合</td><td>PDF 解析→代码生成→运行→论文生成→编译 全流程</td></tr>
+    <tr><td><strong>RAGPanel</strong></td><td>23 KB</td><td>要求 4：文档问答</td><td>文档上传/解析状态/问答/证据定位/Wiki 构建</td></tr>
+    <tr><td><strong>SkillPanel</strong></td><td>15 KB</td><td>要求 7：Skill 管理</td><td>Skill 列表/启用禁用/文档生成/LaTeX/Pandoc 编译</td></tr>
+    <tr><td><strong>WelcomeView</strong></td><td>24 KB</td><td>UX 优化</td><td>欢迎页/快捷操作/新会话入口</td></tr>
+    <tr><td><strong>ConfigModal</strong></td><td>19 KB</td><td>多模型 API 扩展</td><td>服务商选择/API Key 配置/模型列表</td></tr>
+    <tr><td><strong>PermissionDialog</strong></td><td>5 KB</td><td>要求 1：审批系统</td><td>高风险操作 (push/rm) 需用户确认</td></tr>
+  </table>
+
+  <h3 style="margin-top:12px;">状态管理：Zustand</h3>
+  <p>使用 Zustand 5.x 管理全局状态，核心状态包括：会话列表、当前会话消息、partialMessage（流式渲染）、pendingTurns、activeTurn、traceSteps、contextWindow、UI 状态。</p>
+
+  <div class="ss" style="text-align:center;padding:4px;"><img src="欢迎页.png" style="width:95%;max-height:380px;object-fit:contain;border-radius:8px;border:1px solid var(--border);" alt="桌面端完整界面"><br><small style="color:var(--muted);">▲ Open Cowork 桌面端完整界面 — 左侧导航栏 + 中间功能面板 + 右侧 AI 对话</small></div>
+  <div class="ss" style="text-align:center;margin-top:8px;padding:4px;"><img src="第一步_5.png" style="width:95%;max-height:350px;object-fit:contain;border-radius:8px;border:1px solid var(--border);" alt="模块功能概览"><br><small style="color:var(--muted);">▲ 各功能模块概览 — extensions/sandbox/skills/tools 等模块详情</small></div>
+  <div class="pn">13 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 14. C 题端到端工作流 ═══════════════════════ -->
+<div class="slide">
+  <h2>14. 构建 C 题端到端工作流 —— 五步全链路</h2>
+
+  <h3>目标：从题目 PDF 到可编译 LaTeX 论文的自动化流程（独立测试项）</h3>
+
+  <div class="flow" style="margin-bottom:16px;">
+    <div class="fs" style="border-color:var(--accent);"><strong>Step 1</strong><br>📄 解析 PDF<br><small>cproblem.parsePdf</small></div><div class="fa">→</div>
+    <div class="fs" style="border-color:var(--accent2);"><strong>Step 2</strong><br>💻 生成代码<br><small>cproblem.generateCode</small></div><div class="fa">→</div>
+    <div class="fs" style="border-color:var(--green);"><strong>Step 3</strong><br>▶️ 运行代码<br><small>cproblem.runCode</small></div><div class="fa">→</div>
+    <div class="fs" style="border-color:var(--purple);"><strong>Step 4</strong><br>📝 生成论文<br><small>cproblem.generatePaper</small></div><div class="fa">→</div>
+    <div class="fs" style="border-color:var(--orange);"><strong>Step 5</strong><br>✅ 编译验证<br><small>skill.runLatex</small></div>
+  </div>
+
+  <div class="g2">
+    <div class="card ca">
+      <h4>Step 1: 解析 PDF</h4>
+      <ul style="font-size:0.85em;">
+        <li>DocumentPipeline.processDocument() 完整解析</li>
+        <li>全文 → DeepSeek V4 Pro (temp=0.1, max_tokens=4096)</li>
+        <li>结构化输出 CProblemParsed</li>
+        <li>自动补充 missingRate 等统计字段</li>
+      </ul>
+    </div>
+    <div class="card cc">
+      <h4>Step 2: 生成代码</h4>
+      <ul style="font-size:0.85em;">
+        <li>CProblemParsed + 附件路径 → LLM</li>
+        <li>生成 pandas/numpy/matplotlib Python 代码</li>
+        <li>自动去除 markdown 围栏</li>
+      </ul>
+    </div>
+    <div class="card cg">
+      <h4>Step 3: 运行代码</h4>
+      <ul style="font-size:0.85em;">
+        <li>代码写入临时目录 (ai-desktop-cproblem/)</li>
+        <li>120 秒超时执行 python analysis.py</li>
+        <li>捕获 stdout/stderr + 自动收集生成的图表</li>
+      </ul>
+    </div>
+    <div class="card cp">
+      <h4>Step 4&5: 论文+编译</h4>
+      <ul style="font-size:0.85em;">
+        <li>解析数据 + 运行结果 + 图表 → LLM</li>
+        <li>生成 ctexart LaTeX 论文（标准结构）</li>
+        <li>pdflatex 编译 → 预览生成的 PDF</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">状态机与错误处理</h3>
+  <div class="card co">
+    <pre><code style="font-size:0.82em;">// CProblemPanel 状态机：12 个状态 + 任意状态可转到 error
+idle → uploading → parsing → parsed → code_generating →
+code_running → code_done → paper_writing → done
+                                         ↘ error (任意阶段)</code></pre>
+    <p style="margin-top:6px;font-size:0.85em;">每个步骤失败都有明确的错误信息和重试入口。图表引用一致性校验：代码生成图表 → 自动收集 → 传递文件名给 LaTeX prompt → \includegraphics 引用正确的文件名。</p>
+  </div>
+
+  <div class="ss">📸 [截图占位] C 题完整流程 —— PDF 上传→解析结果→代码生成→运行输出+图表→LaTeX 论文→PDF 预览</div>
+  <div class="pn">14 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 15. IPC 通信构建 ═══════════════════════ -->
+<div class="slide">
+  <h2>15. IPC 通信架构 —— 主进程与渲染进程的桥梁</h2>
+
+  <h3>目标：安全、类型安全地实现前后端通信</h3>
+
+  <div class="g2">
+    <div class="card ca">
+      <h4>安全设计</h4>
+      <ul>
+        <li><strong>contextIsolation: true</strong> — 渲染进程无法直接访问 Node.js</li>
+        <li><strong>sandbox: true</strong> — 操作系统级沙箱隔离</li>
+        <li><strong>nodeIntegration: false</strong> — 渲染进程不能 require Node 模块</li>
+        <li><strong>白名单校验：</strong>ALLOWED_CLIENT_EVENTS Set 包含 30+ 允许的通道</li>
+        <li><strong>contextBridge：</strong>仅暴露 window.electronAPI，不暴露 ipcRenderer</li>
+      </ul>
+    </div>
+    <div class="card ca">
+      <h4>通信模式</h4>
+      <p><strong>Renderer → Main：</strong></p>
+      <ul style="font-size:0.85em;">
+        <li><code>window.electronAPI.invoke(event)</code> — 请求-响应模式（带返回值）</li>
+        <li><code>window.electronAPI.send(event)</code> — 单向推送（无返回值）</li>
+      </ul>
+      <p style="margin-top:8px;"><strong>Main → Renderer：</strong></p>
+      <ul style="font-size:0.85em;">
+        <li><code>mainWindow.webContents.send('server-event', event)</code> — 推送实时状态</li>
+        <li>流式消息、工具调用状态、缓存统计、解析进度等实时推送</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">为本次大作业新增的 IPC 通道</h3>
+  <table>
+    <tr><th>通道</th><th>方向</th><th>用途</th><th>所在文件行号</th></tr>
+    <tr><td><code>cproblem.parsePdf</code></td><td>Renderer→Main→Renderer</td><td>C 题 PDF 结构化解析</td><td>index.ts:2935</td></tr>
+    <tr><td><code>cproblem.generateCode</code></td><td>Renderer→Main→Renderer</td><td>根据题面生成 Python 分析代码</td><td>index.ts:2942</td></tr>
+    <tr><td><code>cproblem.runCode</code></td><td>Renderer→Main→Renderer</td><td>在临时目录运行代码并收集图表</td><td>index.ts:2966</td></tr>
+    <tr><td><code>cproblem.generatePaper</code></td><td>Renderer→Main→Renderer</td><td>生成 LaTeX 建模论文</td><td>index.ts:2991</td></tr>
+    <tr><td><code>rag.uploadDocument</code></td><td>Renderer→Main→Renderer</td><td>文档上传→解析→索引 一键完成</td><td>index.ts:3029</td></tr>
+    <tr><td><code>rag.askQuestion</code></td><td>Renderer→Main→Renderer</td><td>RAG 问答（含证据溯源）</td><td>index.ts:3048</td></tr>
+    <tr><td><code>rag.buildWiki</code></td><td>Renderer→Main→Renderer</td><td>构建 LLM Wiki 知识卡片</td><td>index.ts:3055</td></tr>
+    <tr><td><code>eval.runDocumentEval</code></td><td>Renderer→Main→Renderer</td><td>三维度统一评测</td><td>index.ts:2866</td></tr>
+    <tr><td><code>skill.generateDocument</code></td><td>Renderer→Main→Renderer</td><td>Skill 驱动文档生成</td><td>index.ts:3062</td></tr>
+    <tr><td><code>skill.runLatex</code></td><td>Renderer→Main→Renderer</td><td>LaTeX 编译为 PDF</td><td>index.ts:3070</td></tr>
+  </table>
+
+  <div class="ss">📸 [截图占位] IPC 通信调试截图 —— Chrome DevTools 中查看 IPC 消息流</div>
+  <div class="pn">15 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 16. 评测系统构建 ═══════════════════════ -->
+<div class="slide">
+  <h2>16. 构建评测系统 —— 三维度统一指标</h2>
+
+  <h3>目标：一次点击，同时评测文档解析、Skill 生成、C 题三个维度</h3>
+
+  <div class="g3" style="margin-top:12px;">
+    <div class="card ca">
+      <h4>维度 1：文档流水线评测</h4>
+      <table style="font-size:0.78em;">
+        <tr><td>parseSuccessRate</td><td>解析成功率 (success/total)</td></tr>
+        <tr><td>recallAtK</td><td>Top-K 检索召回率</td></tr>
+        <tr><td>mrr</td><td>平均倒数排名</td></tr>
+        <tr><td>evidenceHitRate</td><td>证据命中率 (答案含正确来源)</td></tr>
+        <tr><td>qaAccuracy</td><td>问答准确率</td></tr>
+        <tr><td>tableRecognition</td><td>行/列/合并/表头 识别准确率</td></tr>
+        <tr><td>performance</td><td>解析时间/索引时间/查询延迟/token</td></tr>
+      </table>
+    </div>
+    <div class="card cp">
+      <h4>维度 2：Skill 评测</h4>
+      <table style="font-size:0.78em;">
+        <tr><td>triggerAccuracy</td><td>Skill 触发准确率</td></tr>
+        <tr><td>generationSuccessRate</td><td>文档生成成功率</td></tr>
+        <tr><td>validationPassRate</td><td>自动验证通过率</td></tr>
+        <tr><td>tokenSaved</td><td>相比无 Skill 节省的 token</td></tr>
+        <tr><td>qualityScores</td><td>结构完整性/内容准确/格式规范/可复现</td></tr>
+        <tr><td>failureAnalysis</td><td>失败原因分析</td></tr>
+      </table>
+    </div>
+    <div class="card co">
+      <h4>维度 3：C 题评测</h4>
+      <table style="font-size:0.78em;">
+        <tr><td>parseAccuracy</td><td>题面解析准确率</td></tr>
+        <tr><td>dataReadSuccessRate</td><td>附件数据读取成功率</td></tr>
+        <tr><td>codeFirstRunSuccess</td><td>代码一次运行成功</td></tr>
+        <tr><td>chartCount / chartCorrectRate</td><td>图表数量/正确率</td></tr>
+        <tr><td>latexCompileSuccess</td><td>LaTeX 编译成功</td></tr>
+        <tr><td>paperStructureScore</td><td>论文结构完整性评分</td></tr>
+        <tr><td>reproducibilityScore</td><td>结果可复现性评分</td></tr>
+        <tr><td>humanRating</td><td>人工综合评分</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px;">评测执行流程</h3>
+  <div class="card cg">
+    <ol>
+      <li>收集所有已上传文档 → 统计 parseSuccess/failed 数量</li>
+      <li>执行测试搜索 → 计算 recallAtK, MRR, evidenceHitRate</li>
+      <li>从文档解析成功率推导 Skill 评测指标（generationSuccessRate, validationPassRate）</li>
+      <li>从解析成功率推导 C 题评测指标（parseAccuracy, codeFirstRunSuccess）</li>
+      <li>汇总为 { docEval, skillEval, cProbEval } 一次性返回</li>
+      <li>EvalPanel 渲染三个维度的指标卡片</li>
+    </ol>
+  </div>
+
+  <div class="ss">📸 [截图占位] EvalPanel 评测结果 —— 三个维度指标的仪表盘展示</div>
+  <div class="pn">16 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 17. 测试验证 ═══════════════════════ -->
+<div class="slide">
+  <h2>17. 测试验证 —— 对照课程要求逐项检查</h2>
+
+  <h3>课程 10 项测试要求对照</h3>
+  <table>
+    <tr><th>#</th><th>测试要求</th><th>实现状态</th><th>验证方式</th></tr>
+    <tr><td>a</td><td>Coding Agent 在 SWE-bench Lite / 自建 C/C++ 任务上测试</td><td><span class="tag tag-g">✅ 就绪</span></td><td>Agent 可读取仓库、修改代码、运行测试、生成 diff</td></tr>
+    <tr><td>b</td><td>PDF/表格/图片文档解析和问答测试</td><td><span class="tag tag-g">✅ 就绪</span></td><td>DocumentPipeline 支持 7 种格式、混合检索、证据溯源</td></tr>
+    <tr><td>c</td><td>C 题综合测试（题面 PDF 解析→数据清洗→建模→代码→图表→LaTeX 论文→结果复核）</td><td><span class="tag tag-g">✅ 就绪</span></td><td>CProblemPanel 五步工作流 + CProblemEvalResult 七维指标</td></tr>
+    <tr><td>—</td><td>至少 3 类文件解析（必含 PDF + Excel/CSV + 图片/扫描 PDF）</td><td><span class="tag tag-g">✅ 超额</span></td><td>支持 7 类 (PDF/Word/PPT/Excel/CSV/Markdown/图片)</td></tr>
+    <tr><td>—</td><td>至少 1 个复杂表格问答案例</td><td><span class="tag tag-g">✅ 就绪</span></td><td>askTableQuestion 定向表格检索 + cellRange 级证据</td></tr>
+    <tr><td>—</td><td>至少 1 个 C 题解析样例</td><td><span class="tag tag-g">✅ 就绪</span></td><td>CProblemParsed 完整结构化提取</td></tr>
+    <tr><td>—</td><td>至少 3 个 Skill + SKILL.md 文件</td><td><span class="tag tag-g">✅ 超额</span></td><td>14 个 Skill，全部含 SKILL.md front-matter</td></tr>
+    <tr><td>—</td><td>至少 2 种文档生成 (LaTeX/Word/PPT/PDF/图表)</td><td><span class="tag tag-g">✅ 超额</span></td><td>LaTeX + Word + PPT + 图表 + 数据分析报告 全覆盖</td></tr>
+    <tr><td>—</td><td>生成可运行 Python 代码 + 图表 + LaTeX 论文</td><td><span class="tag tag-g">✅ 就绪</span></td><td>C 题全链路自动生成</td></tr>
+    <tr><td>—</td><td>定量测试 + 定性分析（含成功/失败案例）</td><td><span class="tag tag-g">✅ 就绪</span></td><td>EvalPanel 三维度指标 + failureAnalysis 字段</td></tr>
+  </table>
+
+  <h3 style="margin-top:14px;">当前测试案例</h3>
+  <div class="card co">
+    <table>
+      <tr><th>测试项</th><th>输入</th><th>预期输出</th></tr>
+      <tr><td>C 题综合测试</td><td>题目-就业状态分析与预测.pdf (85.9KB) + 附件1 数据.xls (4.5MB)</td><td>结构化题面 + Python 代码 + 图表 + LaTeX 论文</td></tr>
+      <tr><td>文档解析测试</td><td>PDF / Excel / PPT / Word 等多格式文档</td><td>结构化章节 + 表格 + 检索结果</td></tr>
+      <tr><td>Skill 生成测试</td><td>"生成数据分析报告" "生成 LaTeX 论文" 等触发词</td><td>完整文档 + 验证通过</td></tr>
+    </table>
+  </div>
+
+  <div class="ss">📸 [截图占位] 测试结果汇总 —— 各项指标数据、成功/失败统计、性能数据</div>
+  <div class="pn">17 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 18. 关键技术难点 ═══════════════════════ -->
+<div class="slide">
+  <h2>18. 关键技术难点与解决方案</h2>
+
+  <h3>开发过程中遇到的主要技术挑战</h3>
+
+  <table>
+    <tr><th>#</th><th>难点</th><th>原因</th><th>解决方案</th></tr>
+    <tr>
+      <td>1</td>
+      <td><strong>PDF 解析返回空内容</strong></td>
+      <td>pdfplumber/PyMuPDF 未安装，原项目只支持这两种引擎</td>
+      <td>设计三级回退链：pdfplumber → PyMuPDF → pypdf。pypdf 为纯 Python 包 (6.12.2 已预装)，零外部依赖，确保在任何环境下都能提取文本</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>DeepSeek 不支持 JSON 结构化输出</strong></td>
+      <td>DeepSeek API 不兼容 OpenAI 的 response_format: json_object 参数</td>
+      <td>改用 prompt 工程：在 system prompt 中明确要求 JSON 格式 + 降低 temperature 到 0.1 + 后处理剥离 markdown 围栏 + 健壮的 JSON.parse</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>ELECTRON_RUN_AS_NODE 环境变量导致 Electron 崩溃</strong></td>
+      <td>VSCode 扩展设置的 env var 泄露到 Electron 子进程</td>
+      <td>在 vite.config.ts 的 onstart handler 中 delete process.env.ELECTRON_RUN_AS_NODE，同时在 package.json dev 脚本中 unset 该变量</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>Python 脚本的 shell 转义问题</strong></td>
+      <td>inline Python 脚本通过命令行传递时，引号和特殊字符难以正确转义</td>
+      <td>改用 runPythonScriptFile()：将脚本写入临时 .py 文件再执行，彻底避免 shell 转义</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><strong>中英文混合的 token 估算</strong></td>
+      <td>简单按字符数估算 token 在中英混合文本中误差很大</td>
+      <td>实现 CJK 感知的 estimateTokenCount()：中文字符 ×1.5 + 非中文 ×0.3</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><strong>Skill 系统 EvalPanel 初始显示 null</strong></td>
+      <td>useState 声明了变量但没有 setter 函数</td>
+      <td>补充 setSkillEval/setCProbEval setter，更新 runEval 解构三种结果</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><strong>LLM 生成的 JSON 格式不稳定</strong></td>
+      <td>模型有时会包裹 markdown 代码块，有时会多输出说明文字</td>
+      <td>实现 extractJsonBlock()：先尝试匹配 ```json 围栏 → 匹配 { } 最外层 → 回退原文</td>
+    </tr>
+  </table>
+
+  <div class="card cg" style="margin-top:14px;">
+    <h4>关键经验总结</h4>
+    <ul>
+      <li><strong>回退链设计：</strong>外部依赖不可靠时，必须设计多级回退，确保系统在最简环境下也能工作</li>
+      <li><strong>Prompt 工程 > 参数依赖：</strong>不同模型的 API 参数兼容性不同，良好的 prompt 设计比依赖特定参数更可靠</li>
+      <li><strong>环境变量污染：</strong>桌面应用需要考虑开发工具（VSCode）对运行环境的影响</li>
+      <li><strong>数据结构先行：</strong>CProblemParsed / QAAnswer 等数据结构在设计 pipeline 之前定义，确保上下游接口一致</li>
+    </ul>
+  </div>
+
+  <div class="pn">18 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 19. 提交清单 ═══════════════════════ -->
+<div class="slide">
+  <h2>19. 最终提交内容对照</h2>
+
+  <h3>课程要求提交内容 vs 实际准备</h3>
+  <table>
+    <tr><th>要求提交内容</th><th>状态</th><th>说明</th></tr>
+    <tr><td><strong>1. 源代码</strong></td><td><span class="tag tag-g">✅</span></td><td>完整 Electron + React + TypeScript 项目，含全部模块</td></tr>
+    <tr><td><strong>2. 运行说明</strong></td><td><span class="tag tag-g">✅</span></td><td>npm install → npm run dev，需 Node.js ≥22 + Python 3 + Pandoc</td></tr>
+    <tr><td><strong>3. AGENTS.md / Skills 文件</strong></td><td><span class="tag tag-g">✅</span></td><td>.claude/skills/ 下 14 个 SKILL.md 定义文件</td></tr>
+    <tr><td><strong>4. 文档解析样例</strong></td><td><span class="tag tag-o">待补充</span></td><td>需提供不同格式文档的解析前后对比截图</td></tr>
+    <tr><td><strong>5. 3 个测试任务与结果文件</strong></td><td><span class="tag tag-o">待补充</span></td><td>需完成 Coding Agent / RAG / Skill 的测试并导出结果</td></tr>
+    <tr><td><strong>6. C 题综合测试材料与结果</strong></td><td><span class="tag tag-o">进行中</span></td><td>华中杯 C 题（就业状态分析与预测），pypdf 修复后需完成完整流程</td></tr>
+    <tr><td><strong>7. 实验报告</strong></td><td><span class="tag tag-o">待撰写</span></td><td>可用 word-report Skill 生成模板</td></tr>
+    <tr><td><strong>8. PPT</strong></td><td><span class="tag tag-g">✅</span></td><td>本 HTML PPT 即汇报材料，可导出为 PDF</td></tr>
+    <tr><td><strong>9. 演示视频</strong></td><td><span class="tag tag-o">待录制</span></td><td>需录屏展示：模型配置→Agent 操作→文档解析问答→Skill 生成→C 题全流程</td></tr>
+  </table>
+
+  <h3 style="margin-top:14px;">演示视频脚本建议</h3>
+  <div class="card ca">
+    <ol>
+      <li><strong>启动与配置 (30s)：</strong>打开应用 → 配置 DeepSeek API Key → 展示模型列表</li>
+      <li><strong>Coding Agent (60s)：</strong>输入代码修改任务 → Agent 读取文件 → 生成 diff → 执行测试 → 验证结果</li>
+      <li><strong>文档解析 RAG (60s)：</strong>上传 PDF/Excel/图片 → 查看解析结果 → 进行问答 → 展示证据溯源</li>
+      <li><strong>Skill 文档生成 (40s)：</strong>选择 Skill → 生成文档 → 查看验证结果 → 导出文件</li>
+      <li><strong>C 题全流程 (60s)：</strong>上传题目 PDF + 附件 → 解析题面 → 生成代码 → 运行 → 查看图表 → 生成 LaTeX 论文 → 编译预览 PDF</li>
+      <li><strong>评测面板 (20s)：</strong>打开 EvalPanel → 运行评测 → 查看三维度指标</li>
+    </ol>
+  </div>
+
+  <div class="pn">19 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 20. 技术参数汇总 ═══════════════════════ -->
+<div class="slide">
+  <h2>20. 技术参数汇总</h2>
+
+  <h3>系统技术规格</h3>
+  <div class="g2">
+    <div class="card ca">
+      <h4>运行环境</h4>
+      <table>
+        <tr><td>Node.js</td><td>≥ 22.x</td></tr>
+        <tr><td>Python</td><td>≥ 3.9</td></tr>
+        <tr><td>Pandoc</td><td>≥ 3.1</td></tr>
+        <tr><td>操作系统</td><td>Windows 11 / macOS</td></tr>
+        <tr><td>Electron</td><td>41.7.1</td></tr>
+      </table>
+    </div>
+    <div class="card ca">
+      <h4>AI 模型参数</h4>
+      <table>
+        <tr><td>主推理模型</td><td>DeepSeek V4 Pro</td></tr>
+        <tr><td>嵌入模型</td><td>text-embedding-3-small (1536 维)</td></tr>
+        <tr><td>API 兼容</td><td>OpenAI-compatible endpoint</td></tr>
+        <tr><td>分块大小</td><td>1000 字符 / 100 重叠</td></tr>
+        <tr><td>QA 温度</td><td>precise: 0.1 / chat: 0.5</td></tr>
+      </table>
+    </div>
+    <div class="card ca">
+      <h4>项目规模</h4>
+      <table>
+        <tr><td>主进程入口</td><td>3200+ 行 TypeScript</td></tr>
+        <tr><td>Agent Runner</td><td>1514 行 TypeScript</td></tr>
+        <tr><td>Document Parser</td><td>700+ 行 TypeScript</td></tr>
+        <tr><td>Vector Store</td><td>520 行 TypeScript</td></tr>
+        <tr><td>Skills Manager</td><td>999 行 TypeScript</td></tr>
+      </table>
+    </div>
+    <div class="card ca">
+      <h4>IPC 通信</h4>
+      <table>
+        <tr><td>IPC 通道总数</td><td>30+</td></tr>
+        <tr><td>功能面板</td><td>10 个</td></tr>
+        <tr><td>Skill 数量</td><td>14 个</td></tr>
+        <tr><td>支持文档格式</td><td>7 种</td></tr>
+        <tr><td>Suspense 懒加载</td><td>全部面板</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="margin-top:16px;">构建哲学：增量迭代 × 健壮回退 × 接口先行</h3>
+  <div class="g3">
+    <div class="card cg">
+      <h4>增量迭代</h4>
+      <p style="font-size:0.85em;">每个模块先做最小可用版本，验证通过后再加功能。文档流水线先跑通 PDF→文本，再加上表格提取、OCR、LLM Wiki</p>
+    </div>
+    <div class="card cg">
+      <h4>健壮回退</h4>
+      <p style="font-size:0.85em;">每个外部依赖都有 fallback：PDF 三级回退、嵌入不可用时降级 BM25、LLM JSON 不稳定时多策略提取</p>
+    </div>
+    <div class="card cg">
+      <h4>接口先行</h4>
+      <p style="font-size:0.85em;">先定义 types.ts，再实现逻辑。CProblemParsed、QAAnswer、WikiCard 等数据结构在设计阶段就确定</p>
+    </div>
+  </div>
+
+  <div class="pn">20 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 21. 项目文件结构 ═══════════════════════ -->
+<div class="slide">
+  <h2>21. 项目文件结构一览</h2>
+
+  <h3>关键源码文件与作用</h3>
+
+<pre><code style="font-size:0.78em;">ai-desktop/
+├── src/main/
+│   ├── index.ts                          # 🎯 主进程入口 (3200+ 行) — 所有 IPC handler、应用生命周期
+│   ├── claude/
+│   │   └── agent-runner.ts               # 🤖 Agent 执行引擎 (1514 行) — pi-ai SDK 集成
+│   ├── document-pipeline/                # 📄 文档流水线（本次大作业核心新增模块）
+│   │   ├── index.ts                      #   Pipeline 协调器 (239 行) — 单例模式、一键 processDocument
+│   │   ├── types.ts                      #   📐 所有类型定义 (249 行) — 接口先行
+│   │   ├── document-store.ts             #   📁 文档元数据管理 — Map + JSON 持久化
+│   │   ├── document-parser.ts            #   🔍 多格式解析引擎 (700+ 行) — 三级 PDF 回退
+│   │   ├── document-indexer.ts           #   ✂️ 智能分块器 (80+ 行) — CJK 感知 token 计数
+│   │   ├── vector-store.ts               #   📊 向量存储 (520 行) — 余弦+BM25+RRF 混合搜索
+│   │   ├── document-qa.ts                #   💬 RAG 问答引擎 (80+ 行) — 检索→生成→证据溯源
+│   │   └── llm-wiki.ts                   #   📚 LLM Wiki 构建器 (80+ 行) — WikiCard 生成+缓存
+│   ├── skills/
+│   │   └── skills-manager.ts             # ⚡ 技能管理器 (999 行) — 发现/加载/热重载
+│   ├── config/config-store.ts            # ⚙️ 配置持久化 — electron-store
+│   ├── db/database.ts                    # 🗄️ SQLite 数据库 — better-sqlite3
+│   ├── sandbox/                          # 📦 沙箱隔离 — WSL2/Lima VM
+│   ├── mcp/                              # 🔌 MCP 协议 — Model Context Protocol
+│   ├── memory/                           # 🧠 内存系统 — 会话内/跨会话/核心记忆
+│   └── utils/logger.ts                   # 📝 日志工具
+├── src/preload/
+│   └── index.ts                          # 🌉 Preload 桥接 — contextBridge + 白名单
+├── src/renderer/
+│   ├── App.tsx                           # 🖼️ 根组件 — 布局路由
+│   ├── store/index.ts                    # 🗃️ Zustand 全局状态
+│   ├── hooks/useIPC.ts                   # 🔗 IPC Hook (27KB) — TypeScript 类型安全
+│   ├── types/index.ts                    # 📐 渲染进程类型
+│   └── components/
+│       ├── ChatView.tsx                  # 💬 聊天主界面 (31KB)
+│       ├── ContextPanel.tsx              # 📋 上下文面板 (28KB)
+│       ├── Sidebar.tsx                   # 📱 左侧导航 (21KB)
+│       ├── WelcomeView.tsx               # 🏠 欢迎页 (24KB)
+│       ├── EvalPanel.tsx                 # 📈 评测仪表盘 (19KB)
+│       ├── CProblemPanel.tsx             # 🧮 C 题工作流 (21KB) ⬅ 大作业核心面板
+│       ├── RAGPanel.tsx                  # 📚 文档知识库 (23KB) ⬅ 大作业核心面板
+│       ├── SkillPanel.tsx                # 🔧 技能管理 (15KB) ⬅ 大作业核心面板
+│       └── ConfigModal.tsx               # ⚙️ API 配置 (19KB)
+├── .claude/skills/                       # 🎯 内置 Skill 定义 (14 个 SKILL.md)
+├── package.json                          # 📦 项目配置 (Node ≥22, Electron 41)
+├── vite.config.ts                        # ⚡ Vite 构建配置 (含 ELECTRON_RUN_AS_NODE 修复)
+└── tsconfig.json                         # 📐 TypeScript 配置
+</code></pre>
+
+  <div class="pn">21 / 22</div>
+</div>
+
+<!-- ═══════════════════════ 22. 结束页 ═══════════════════════ -->
+<div class="slide cover">
+  <h1 style="font-size:3em;margin-bottom:12px;">感谢聆听</h1>
+  <p style="font-size:1.3em;color:var(--text-muted);max-width:700px;margin-bottom:28px;">
+    本项目基于 Open Cowork 开源框架，围绕课程三大核心要求<br>
+    从环境搭建到模块构建到集成测试，完整实现了<br>
+    "模型 + 工具 + 约束工程 + 知识库 + Skill" 的综合 Agent 桌面系统
+  </p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;">
+    <span class="tag tag-b">Coding Agent</span>
+    <span class="tag tag-g">Document RAG</span>
+    <span class="tag tag-p">14 Skills</span>
+    <span class="tag tag-o">C Problem E2E</span>
+    <span class="tag tag-c">10 Panels</span>
+    <span class="tag tag-r">3D Eval</span>
+  </div>
+  <p style="font-size:1.1em;color:var(--accent2);">欢迎提问</p>
+  <p style="margin-top:24px;color:var(--text-muted);font-size:0.85em;">截图和录屏位置已预留，后续补充后可在 HTML 中替换占位符</p>
+  <div class="pn">22 / 22</div>
+</div>
+
+</body>
+</html>

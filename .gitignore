@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-electron/
+dist-wsl-agent/
+dist-lima-agent/
+dist-mcp/
+release/
+
+# IDE
+.vscode/*
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+**/__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vite
+.vite/
+
+# Claude
+.claude/*
+CLAUDE.md
+
+# Reference projects (have their own git repos)
+reference_projects/
+
+# Large binary files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.ico
+*.webp
+*.docx
+*.pdf
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+*.exe
+*.msi
+*.dmg
+*.xls
+*.xlsx
+*.otf
+*.ttf
+
+# Misc
+*.pem
+*.p12
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
